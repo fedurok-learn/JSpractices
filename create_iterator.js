@@ -2,21 +2,20 @@
 
 let createIterator = function (obj) {
     Object.defineProperty(
-        obj, 
-        Symbol.iterator,
-        {
+        obj,
+        Symbol.iterator, {
             writable: false,
             enumerable: false,
             configurable: true,
             value: function () {
                 let o = this;
                 let idx = 0;
-                let props = Object.keys( o );
+                let props = Object.keys(o);
 
                 return {
-                    next: function() {
+                    next: function () {
                         return {
-                            value: o[ props[ idx++ ] ],
+                            value: o[props[idx++]],
                             done: idx > props.length
                         }
                     }
@@ -37,6 +36,6 @@ createIterator(myobj);
 
 let it = myobj[Symbol.iterator]();
 
-for(let i of myobj) {
-    console.log( i );
+for (let i of myobj) {
+    console.log(i);
 }
