@@ -1,56 +1,26 @@
 "use strict";
 
-
-const isTrulyNaN  = (elem) => {
-    return (elem !== elem && isNaN(elem));
-}
-
-const containsNaN = (array) => {
-    let index = 0;
-    for (let elem of array) {
-        if (isTrulyNaN(elem)) {
-            return index;
-        }
-        index++;
-    }
-
-    return -1;
-}
-
-const contains = (array, needle) => {
-    if (isTrulyNaN(needle)) {
-        return containsNaN(array);
-    } else {
-        let index = 0;
-        for (let elem of array) {
-            if (elem === needle) {
-                return index;
-            }
-
-            index++;
-        }
-
-        return -1;
-    }
-}
+//Writing some wheels
 
 
 class MySet {
     //my own set class
     //implemented not for perfomance purposes
-    length;
 
     constructor(arr) {
         this.container = this.setify(arr);
-        this.length = this.container.length;
     }
 
     setify(arr) {
-        //set from array
+        //unique elems from array
         let newArr = [];
-        for (let elem of arr)
-            if (newArr.indexOf(elem) < 0)
-                newArr.push(elem);
+
+        arr.map(
+            (elem) => {
+                if (newArr.indexOf(elem) < 0) 
+                    newArr.push( elem );
+            }
+        )
 
         return newArr;
     }
@@ -58,14 +28,12 @@ class MySet {
     push(elem) {
         // add elem to set
         if (this.container.indexOf( elem ) < 0) {
-            this.length++;
             return this.container.push(elem);
         }
     }
 
     pop(elem) {
         //pop elem from set
-        this.length--;
         if (elem === undefined) {
             //just pop
             return this.container.pop();
@@ -80,7 +48,7 @@ class MySet {
 
     clear() {
         //del all elems from set
-        while (this.length) {
+        while (this.container !== []) {
             this.pop();
         }
     }
@@ -107,12 +75,12 @@ class MySet {
         //but not in the others
 
         let sset = new MySet([]);
-        sset = sset.union(sets);
+        sset = sset.union(...sets);
 
-        arr = [];
+        let arr = [];
 
         for (let elem of this) {
-            if (!sset.contains(elem)) {
+            if (sset.contains(elem) < 0) {
                 arr.push(elem);
             }
         }
@@ -124,23 +92,29 @@ class MySet {
         //all elements that are common
         //to every set
 
-        let sset = new MySet([]);
-        sset = sset.union(sets);
+        let sset = new MySet(this.container);
 
-        arr = [];
-
-        for (let elem of this) {
-            if (sset.contains(elem)) {
-                arr.push(elem);
+        for (let set of sets) {
+            for (let elem of this) {
+                if (set.contains(elem) < 0) {
+                    sset.pop(elem);
+                }
             }
+
+            if (sset.container.length === 0) break;
         }
 
-        return new MySet(arr);
+        return sset;
     }
 
     symmetricDifference(...sets) {
         //i. e. all elements that are exactly in one
         //of the sets
+
+        if (this.container.length !== 0) {
+            let tempSet = new MySet([]);
+            return tempSet.symmetricDifference(...sets.concat(this));
+        }
 
         let resSet = new MySet([]);
 
@@ -164,15 +138,15 @@ class MySet {
 
     isSubset(set) {
         for (let elem of this) {
-            if (!set.contains(elem))
-                return true;
+            if (set.contains(elem) < 0)
+                return false;
         }
-        return false;
+        return true;
     }
 
     isDisjoint(set) {
         for(let elem of set) {
-            if (this.contains(elem)) {
+            if (this.contains(elem) >= 0) {
                 return false;
             }
         }
@@ -182,4 +156,24 @@ class MySet {
     [Symbol.iterator]() {
         return this.container[Symbol.iterator]();
     }
+
+    inspect(depth, opts) {
+        return this.container;
+    }
 }
+
+
+let a = new MySet([1, 2, 3]);
+let b = new MySet([2, 3, 4]);
+let c = new MySet([4, 5, 6]);
+
+console.log(
+    'A ', a,
+    '\nB ', b,
+    '\nC ', c
+    );
+
+console.log( "union ", a.union(b, c) );
+console.log( "difference ", a.difference(b, c) );
+console.log( "symm difference ", a.symmetricDifference(b, c) );
+console.log( "intersection ", a.intersection(b, c) );
