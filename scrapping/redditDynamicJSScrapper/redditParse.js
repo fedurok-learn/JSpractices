@@ -2,7 +2,7 @@
 
 const $ = require('cheerio');
 
-const getHTML = require("./getRightHTML");
+const getHTML = require("../getRightHTML");
 
 const url = "https://www.reddit.com/";
 
