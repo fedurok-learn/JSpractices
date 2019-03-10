@@ -3,26 +3,54 @@
 const $ = require("cheerio");
 const fs = require('fs');
 const rp = require('request-promise');
+const puppeteer = require("puppeteer");
 
-
-const getHTML = require("../getRightHTML");
 const asyncf = require("../asyncMap");
 
 const url = "https://www.instagram.com/_headless_nick_/"
 const PATH =  __dirname + "/Photos/"
 const addUrl = 'https://www.instagram.com'
 
+async function autoScroll(page){
+    await page.evaluate(async () => {
+        await new Promise((resolve, reject) => {
+            var totalHeight = 0;
+            var distance = 100;
+            var timer = setInterval(() => {
+                var scrollHeight = document.body.scrollHeight;
+                window.scrollBy(0, distance);
+                totalHeight += distance;
 
-String.prototype.hashCode = function() {
-    var hash = 0, i, chr;
-    if (this.length === 0) return hash;
-    for (i = 0; i < this.length; i++) {
-      chr   = this.charCodeAt(i);
-      hash  = ((hash << 5) - hash) + chr;
-      hash |= 0; // Convert to 32bit integer
-    }
-    return hash;
-  };
+                if(totalHeight >= scrollHeight){
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, 100);
+        });
+    });
+}
+
+let getHTML = (url) => {
+    return new Promise(
+        async (resolve, reject) => {
+            try {
+                const browser = await puppeteer.launch();
+                const page = await browser.newPage();
+                await page.goto(url);
+            
+                await autoScroll(page);
+
+                const content = await page.content();
+
+                resolve(content);
+            
+                await browser.close();
+            } catch(err) {
+                reject(err);
+            }
+        }
+    )
+}
 
 const processEveryPhoto = (links) => {
     
@@ -58,7 +86,9 @@ const processEveryPhoto = (links) => {
     return arr;
 }
 
-let photoLinks = getHTML(url)
+
+//start of a program
+getHTML(url)
     .then(
         (html) => {
             let clsName = "v1Nh3 kIKUG  _bz0w";
@@ -71,7 +101,9 @@ let photoLinks = getHTML(url)
                     detailedPhotos.push(linkToPhoto);
                 }
             );
+
             
+            process.setMaxListeners(detailedPhotos.length);
             return detailedPhotos;
         }
     )
@@ -91,7 +123,7 @@ let photoLinks = getHTML(url)
                     }
                     
                     function genName(item) {
-                        return PATH + item.hashCode() + ".jpg";
+                        return PATH + Date.now() + ".jpg";
                     }
 
                     rp.get(options)
